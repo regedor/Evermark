@@ -1,0 +1,79 @@
+# encoding: UTF-8
+require 'rubygems'
+begin
+  Gem::Specification.find_by_name('rack') && Gem::Specification.find_by_name('redcarpet')
+rescue Gem::LoadError
+  %x{export GEM_HOME=$PWD/gems/ ; gem install bundler --no-ri --no-rdoc ; gems/gems/bundle*/bin/bundle }
+end
+Gem.use_paths(nil, Gem.path << 'gems/')
+require 'rack'
+require 'redcarpet'
+
+class EvernoteText
+
+  def changes? ; @changes end
+  def last_modified ; @@last_modified end
+  @@last_text = @@last_modified = ''
+
+
+  def initialize
+    @text = (%x{ osascript <<APPLESCRIPT
+          tell application "Evernote"
+              if selection is not {} then
+                  set the_selection to selection
+                  return HTML content of item 1 of the_selection
+              else
+                  return "NOTHING"
+              end if
+          end tell
+    APPLESCRIPT} || "NOTHING").force_encoding(Encoding::UTF_8)
+    @changes = @@last_text != @text
+
+    if @changes
+      @@last_text     = @text
+      @@last_modified = Time.now.to_s.split(' ')[1] 
+    end
+  end
+
+
+  def to_txt
+    %x{echo '#{@text.gsub("'",'__APOSTROPHE__')}'|textutil -stdin -convert txt -stdout}.force_encoding(Encoding::UTF_8).gsub("\302\240", ' ').gsub('__APOSTROPHE__', "'")
+  end
+
+
+  def to_html
+    Redcarpet::Markdown.new(Redcarpet::Render::HTML.new,:tables => true, :highlight => true, :fenced_code_blocks => true).render(self.to_txt) 
+  end
+end
+
+
+app = Proc.new do |env|
+  text = EvernoteText.new
+
+  if text.changes?
+    @body = ["<!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset='utf-8'> 
+          <link rel='icon' href='data:;base64,iVBORw0KGgo='>
+          <style>#{ File.read(File.expand_path('../markdown.css', __FILE__)) }</style>
+          <style>#{ File.read(File.expand_path('../highlight.css', __FILE__)) }</style>
+          <script type='text/JavaScript'>#{ File.read(File.expand_path('../all.js', __FILE__)).sub!('__LASTMODIFIED__', text.last_modified) }</script>
+          <script type='text/JavaScript'>#{ File.read(File.expand_path('../highlight.pack.js', __FILE__)) }</script>
+          <script>hljs.initHighlightingOnLoad();</script>
+        </head>
+        <body class'markdown-body'>#{text.to_html}</body>
+      </html>
+    "]
+  end
+
+
+  headers = { 'Content-Type'  => 'text/html', 'Last-Modified' => text.last_modified }
+  body    = env["REQUEST_METHOD"] == "HEAD" ? [] : @body
+
+  ['200', headers, body]
+end
+
+puts "\nEvermark v0.1\n"
+Thread.new { sleep 3 ; %x{ open "http://localhost:3232/" } }
+Rack::Handler::WEBrick.run app, :Port => 3232
