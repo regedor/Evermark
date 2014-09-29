@@ -1,5 +1,5 @@
 # encoding: UTF-8
-VERSION='0.1'
+VERSION='0.2'
 puts "** Evermark v#{VERSION}\n\n"
 
 #
@@ -50,6 +50,8 @@ unless gem_available?('rack') && gem_available?('redcarpet')
   puts "Note: Everythting will be kept inside the app not aftecting your system at all."
   puts "It means that by removing the app no rubish would stay on your computer.\n\n"
   %x{export GEM_HOME=$PWD/gems/ ; gem install bundler --no-ri --no-rdoc ; gems/gems/bundle*/bin/bundle }
+  Gem.clear_paths
+  Gem.use_paths(nil, Gem.path << 'gems/')
 end
 
 require 'rack'
@@ -84,7 +86,8 @@ class EvernoteText
         end if
       end tell
       APPLESCRIPT  }.force_encoding(Encoding::UTF_8)
-    @text = "Evernote is too quite =(" if @text.nil? || @text == ''   
+    @text = @@last_text == '' ? "YOU SHOULD OPEN A NOTE ON EVERNOTE" : @@last_text if @text.nil? || @text == '' 
+
 
     @changes = @@last_text != @text
 
@@ -143,6 +146,7 @@ puts "** Loading Evermark Server\n\n"
 Thread.new do
   sleep 3
   puts "** Opening the Evermark page: http://localhost:3232/"
+  puts "You can now minimize this window."
   puts "To stop Evermark Server press cancel and then quit. Enjoy =)\n\n"
   %x{ open "http://localhost:3232/" } 
 end
