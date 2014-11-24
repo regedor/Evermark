@@ -1,5 +1,5 @@
 # encoding: UTF-8
-VERSION='0.2'
+VERSION='0.3'
 puts "** Evermark v#{VERSION}\n\n"
 
 #
@@ -86,25 +86,25 @@ class EvernoteText
         end if
       end tell
       APPLESCRIPT  }.force_encoding(Encoding::UTF_8)
-    @text = @@last_text == '' ? "YOU SHOULD OPEN A NOTE ON EVERNOTE" : @@last_text if @text.nil? || @text == '' 
+    @text = @@last_text == '' ? "YOU SHOULD OPEN A NOTE ON EVERNOTE" : @@last_text if @text.nil? || @text == ''
 
 
     @changes = @@last_text != @text
 
     if @changes
       @@last_text     = @text
-      @@last_modified = Time.now.to_s.split(' ')[1] 
+      @@last_modified = Time.now.to_s.split(' ')[1]
     end
   end
 
 
   def to_txt
-    %x{echo '#{@text.gsub("'",'__APOSTROPHE__')}'|textutil -stdin -convert txt -stdout}.force_encoding(Encoding::UTF_8).gsub("\302\240", ' ').gsub('__APOSTROPHE__', "'")
+    @text.gsub("\302\240", ' ').gsub('<br />', "\n").gsub(/<\/div><div/, "<\/x>\n<x").gsub(/<\/?[^>]*>/, '')
   end
 
 
   def to_html
-    Redcarpet::Markdown.new(Redcarpet::Render::HTML.new,:tables => true, :highlight => true, :fenced_code_blocks => true).render(self.to_txt) 
+    Redcarpet::Markdown.new(Redcarpet::Render::HTML.new,:tables => true, :highlight => true, :fenced_code_blocks => true).render(self.to_txt)
   end
 end
 

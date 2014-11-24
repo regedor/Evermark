@@ -9,7 +9,7 @@ You can read more about Evermark and hear its amazing jingle [here](http://writi
 Installation
 ------------
 
-Start by downloading the [latest release](https://github.com/regedor/evermark/archive/v0.2.zip).
+Start by downloading the [latest release](https://github.com/regedor/evermark/archive/v0.3.zip).
 
 Unzip the file, copy the Evermark app to your applications folder and then open it. Simple!
 
