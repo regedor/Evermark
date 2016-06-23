@@ -49,7 +49,7 @@ unless gem_available?('rack') && gem_available?('redcarpet')
   puts "** Downloading Rubygems dependencies"
   puts "Note: Everythting will be kept inside the app not aftecting your system at all."
   puts "It means that by removing the app no rubish would stay on your computer.\n\n"
-  %x{export GEM_HOME=$PWD/gems/ ; gem install bundler --no-ri --no-rdoc ; gems/gems/bundle*/bin/bundle }
+  %x{export GEM_HOME=$PWD/gems/ ; gem install bundler --no-ri --no-rdoc ; gems/gems/bundle*/exe/bundle }
   Gem.clear_paths
   Gem.use_paths(nil, Gem.path << 'gems/')
 end
